@@ -11,7 +11,7 @@ file_patt = re.compile(r'"([^"]+?\/[^"]+?\.[^."]+?)"')
 
 class Command(NoArgsCommand):
     
-    def handle(self, *args, **kwargs):
+    def handle_noargs(self, **options):
         from django.conf import settings
         
         app_module_paths = []
