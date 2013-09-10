@@ -4,12 +4,19 @@ from shutil import copy
 
 from django.core.management.base import CommandError, NoArgsCommand
 from django.db.models import get_apps
+from optparse import make_option
 
 
 file_patt = re.compile(r'"([^"]+?\/[^"]+?\.[^."]+?)"')
 
 
 class Command(NoArgsCommand):
+    option_list = NoArgsCommand.option_list + (
+        make_option('--noinput',
+            action='store_false', dest='interactive', default=True,
+            help="Do NOT prompt the user for input of any kind."),
+        )
+
     
     def handle_noargs(self, **options):
         from django.conf import settings
@@ -36,10 +43,11 @@ class Command(NoArgsCommand):
             except StopIteration:
                 pass
         
-        confirm = raw_input("This will overwrite any existing files. Proceed? ")
-        if confirm != 'yes':
-            raise CommandError("Media syncing aborted")
-        
+        if options['interactive']:
+            confirm = raw_input("This will overwrite any existing files. Proceed? ")
+            if confirm != 'yes':
+                raise CommandError("Media syncing aborted")
+
         for root, fixture in json_fixtures:
             file_paths = file_patt.findall(open(fixture).read())
             if file_paths:
