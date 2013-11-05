@@ -52,6 +52,8 @@ class Command(NoArgsCommand):
             file_paths = file_patt.findall(open(fixture).read())
             if file_paths:
                 for fp in file_paths:
+                    if fp.startswith(('http:', 'https:')):
+                        continue
                     fixture_media = os.path.join(root, 'media')
                     fixture_path = os.path.join(fixture_media, fp)
                     if not os.path.exists(fixture_path):
