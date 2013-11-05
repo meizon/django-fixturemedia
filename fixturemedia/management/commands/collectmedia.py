@@ -1,5 +1,6 @@
 import os
 import re
+from optparse import make_option
 from shutil import copy
 
 from django.core.management.base import CommandError, NoArgsCommand
@@ -10,10 +11,16 @@ file_patt = re.compile(r'"([^"]+?\/[^"]+?\.[^."]+?)"')
 
 
 class Command(NoArgsCommand):
-    
-    def handle(self, *args, **kwargs):
-        from django.conf import settings
+
+    option_list = NoArgsCommand.option_list + (
+        make_option('--noinput',
+            action='store_false', dest='interactive', default=True,
+            help="Do NOT prompt the user for input of any kind."),
+    )
         
+    def handle(self, **options):
+        from django.conf import settings
+
         app_module_paths = []
         for app in get_apps():
             if hasattr(app, '__path__'):
@@ -35,11 +42,12 @@ class Command(NoArgsCommand):
                         json_fixtures.append((root, os.path.join(root, file)))
             except StopIteration:
                 pass
-        
-        confirm = raw_input("This will overwrite any existing files. Proceed? ")
-        if confirm != 'yes':
-            raise CommandError("Media syncing aborted")
-        
+
+        if options['interactive']:
+            confirm = raw_input("This will overwrite any existing files. Proceed? ")
+            if confirm not in ['yes', 'y', 'Y']:
+                raise CommandError("Media syncing aborted")
+
         for root, fixture in json_fixtures:
             file_paths = file_patt.findall(open(fixture).read())
             if file_paths:
